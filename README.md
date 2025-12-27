@@ -73,9 +73,11 @@ sudo systemctl enable docker
 
 # Add your user to docker group (optional, to run without sudo)
 sudo usermod -aG docker $USER
-# Log out and back in for group changes to take effect
 
-# Verify installation
+# Log out and back in for group changes to take effect
+exit
+
+# SSH back in and verify installation
 docker --version
 docker-compose --version
 ```
