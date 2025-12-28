@@ -25,22 +25,26 @@ sudo cp fail2ban/jail.d/ccx-faucet.conf /etc/fail2ban/jail.d/
 
 The `docker-compose.yml` already mounts `faucet.log` as a volume, so the log file is accessible from the host.
 
+**Important**: Ensure `faucet.log` exists as a **file** (not a directory) before starting Docker. If Docker creates it as a directory, fix it with:
+```bash
+sudo rm -rf faucet.log
+touch faucet.log
+```
+
 Update `/etc/fail2ban/jail.d/ccx-faucet.conf` with the path to your project directory:
 
 ```ini
 logpath = /path/to/conceal-faucet-api/faucet.log
 ```
 
-Replace `/path/to/conceal-faucet-api` with your actual project path. For example:
-```ini
-logpath = /home/ccxbeelink/conceal-faucet-api/faucet.log
-```
-
 ### 4. Test the Filter
 
 ```bash
-# Test the filter with sample log lines
-sudo fail2ban-regex /var/log/ccx-faucet.log /etc/fail2ban/filter.d/ccx-faucet.conf
+# Create a test log entry
+echo "2025-12-28T12:34:56.789Z RATE_LIMIT IP=1.2.3.4 PATH=/api/claim" >> /path/to/conceal-faucet-api/faucet.log
+
+# Test the filter (replace with your actual log path)
+sudo fail2ban-regex /path/to/conceal-faucet-api/faucet.log /etc/fail2ban/filter.d/ccx-faucet.conf
 ```
 
 ### 5. Restart Fail2Ban
