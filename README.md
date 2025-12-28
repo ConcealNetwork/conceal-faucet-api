@@ -257,7 +257,12 @@ const response = await fetch(
 );
 
 const data = await response.json();
-// { success: true, message: "Session started" }
+// { success: true, message: "Session started", csrfToken: "abc123..." }
+
+// CRITICAL: Store the CSRF token in memory (React state, Vue data, etc.)
+// You'll need it for the /claim request
+const csrfToken = data.csrfToken;
+// Example: setCsrfToken(data.csrfToken) in React
 
 // Cookie is set automatically by browser (HttpOnly, can't be read by JavaScript)
 ```
