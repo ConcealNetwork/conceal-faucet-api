@@ -53,7 +53,8 @@ router.get("/health", async (req, res) => {
 });
 
 // GET /api/start-game?address=ccx...
-router.get("/start-game", async (req, res) => {
+// Origin validation in production to bind session to frontend domain
+router.get("/start-game", requireTrustedOrigin, async (req, res) => {
   const address = req.query.address;
 
   // Validate CCX address format: must start with "ccx7" and be 98 characters
@@ -72,7 +73,9 @@ router.get("/start-game", async (req, res) => {
   try {
     // Get real client IP (handles proxy headers from nginx)
     const clientIP = getClientIP(req);
-    const { token, csrfToken } = await createSession(clientIP, address);
+    // Get origin to bind session to the frontend that created it
+    const origin = req.headers.origin || req.headers.Origin || null;
+    const { token, csrfToken } = await createSession(clientIP, address, origin);
 
     // Set HttpOnly cookie for security (cross-domain)
     res.cookie("faucet-token", token, {

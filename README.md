@@ -33,7 +33,7 @@ The API uses **HttpOnly cookies** for secure session management. The token is ne
 2. **Claim Reward** (`/api/claim`)
    - Browser automatically sends the HttpOnly cookie (no manual token handling needed)
    - Requires `X-FAUCET-CSRF` header matching the per-session CSRF token from `/start-game` (CSRF protection)
-   - Validates Origin header matches `FRONTEND_DOMAIN` (server-side CORS enforcement)
+   - Validates Origin header matches one of the allowed `FRONTEND_DOMAIN`(s) (server-side CORS enforcement)
    - Validates token from cookie
    - Checks token's address matches claim request
    - Verifies IP matches the session (prevents cookie theft)
@@ -125,6 +125,8 @@ Set at least:
 
 ```text
 FRONTEND_DOMAIN=https://your-frontend.com
+# Or multiple domains (comma-separated):
+# FRONTEND_DOMAIN=https://frontend1.com,https://frontend2.com,https://frontend3.com
 
 DAEMON_HOST=http://ip_address_of_daemon
 DAEMON_RPC_PORT=16000

@@ -67,19 +67,25 @@ function assertEnv() {
     }
   }
 
-  // FRONTEND_DOMAIN: Required, must be a valid HTTPS URL
+  // FRONTEND_DOMAIN: Required, must be valid HTTPS URL(s)
+  // Supports comma-separated list: https://frontend1.com,https://frontend2.com
   if (!process.env.FRONTEND_DOMAIN) {
     errors.push("FRONTEND_DOMAIN is required");
   } else {
-    if (!process.env.FRONTEND_DOMAIN.startsWith("https://")) {
-      errors.push(`FRONTEND_DOMAIN must start with "https://" (got: ${process.env.FRONTEND_DOMAIN})`);
+    const domains = process.env.FRONTEND_DOMAIN.split(",").map((d) => d.trim()).filter((d) => d.length > 0);
+    if (domains.length === 0) {
+      errors.push("FRONTEND_DOMAIN must contain at least one valid domain");
     }
-    // Basic URL validation
-    try {
-      new URL(process.env.FRONTEND_DOMAIN);
-    } catch (e) {
-      errors.push(`FRONTEND_DOMAIN must be a valid URL (got: ${process.env.FRONTEND_DOMAIN})`);
-    }
+    domains.forEach((domain, index) => {
+      if (!domain.startsWith("https://")) {
+        errors.push(`FRONTEND_DOMAIN[${index}] must start with "https://" (got: ${domain})`);
+      }
+      try {
+        new URL(domain);
+      } catch (e) {
+        errors.push(`FRONTEND_DOMAIN[${index}] must be a valid URL (got: ${domain})`);
+      }
+    });
   }
 
   // If any errors, throw with clear message

@@ -27,7 +27,9 @@ echo
 echo "== 2) Start game (session token set as HttpOnly cookie) =="
 # Save cookies to a temp file
 COOKIE_FILE=$(mktemp)
-START_RESPONSE=$(curl -si -c "$COOKIE_FILE" "$API_BASE/start-game?address=$CCX_ADDRESS")
+START_RESPONSE=$(curl -si -c "$COOKIE_FILE" \
+  -H "Origin: http://localhost:3000" \
+  "$API_BASE/start-game?address=$CCX_ADDRESS")
 echo "$START_RESPONSE" | grep -E "^HTTP|^Set-Cookie|^\{"
 echo
 

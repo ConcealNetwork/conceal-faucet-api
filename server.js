@@ -19,8 +19,31 @@ app.use(express.json());
 app.use(cookieParser());
 
 // CORS configuration for cross-domain cookies
+// Support multiple frontend domains (comma-separated)
+function getCorsOrigins() {
+  const frontendDomain = process.env.FRONTEND_DOMAIN;
+  if (!frontendDomain) {
+    return ["http://localhost:3000"];
+  }
+  return frontendDomain
+    .split(",")
+    .map((domain) => domain.trim())
+    .filter((domain) => domain.length > 0);
+}
+
 const corsOptions = {
-  origin: process.env.FRONTEND_DOMAIN || "http://localhost:3000",
+  origin: (origin, callback) => {
+    const allowedOrigins = getCorsOrigins();
+    // Allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin) {
+      return callback(null, true);
+    }
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true, // Allow cookies to be sent
   optionsSuccessStatus: 200,
 };

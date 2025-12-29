@@ -31,7 +31,7 @@ async function deleteSessionsForAddress(address) {
 
 const getClientIP = require("../utils/getClientIP");
 
-async function createSession(ip, address) {
+async function createSession(ip, address, origin) {
   // Delete any existing sessions for this address to prevent multiple active sessions
   await deleteSessionsForAddress(address);
 
@@ -43,6 +43,7 @@ async function createSession(ip, address) {
   const data = JSON.stringify({
     ip,
     address,
+    origin, // Store origin to bind session to the frontend that created it
     startedAt: Date.now(),
     csrfToken, // Per-session CSRF token
   });
@@ -107,6 +108,38 @@ async function verifySessionToken(req, res, next) {
     
     if (session.ip !== clientIP) {
       return res.status(403).json({ error: "IP mismatch" });
+    }
+
+    // Validate origin matches the session's origin (prevents cross-frontend session reuse)
+    // In production, origin is always required and must match
+    // In development, if session has origin, validate it matches (allows testing without origin)
+    const requestOrigin = req.headers.origin || req.headers.Origin;
+    if (process.env.NODE_ENV === "production") {
+      // In production, session must have origin and it must match request
+      if (!session.origin || !requestOrigin || requestOrigin !== session.origin) {
+        const ip = getClientIP(req);
+        logSecurityEvent("ABUSE", {
+          IP: ip,
+          PATH: req.originalUrl,
+          REASON: "Origin Mismatch",
+          SESSION_ORIGIN: session.origin || "missing",
+          REQUEST_ORIGIN: requestOrigin || "missing",
+        });
+        return res.status(403).json({ error: "Invalid request" });
+      }
+    } else {
+      // In development, if session has origin, validate it matches (but allow if session has no origin)
+      if (session.origin && requestOrigin && requestOrigin !== session.origin) {
+        const ip = getClientIP(req);
+        logSecurityEvent("ABUSE", {
+          IP: ip,
+          PATH: req.originalUrl,
+          REASON: "Origin Mismatch",
+          SESSION_ORIGIN: session.origin,
+          REQUEST_ORIGIN: requestOrigin,
+        });
+        return res.status(403).json({ error: "Invalid request" });
+      }
     }
 
     req.sessionToken = token;
